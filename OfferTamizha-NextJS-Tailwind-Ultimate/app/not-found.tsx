@@ -1,0 +1,2 @@
+import Link from 'next/link'
+export default function NotFound(){return <main className="grid min-h-screen place-items-center bg-slate-50 p-6 dark:bg-slate-950"><div className="text-center"><span className="text-7xl font-black text-brand-500">404</span><h1 className="mt-4 text-2xl font-black">Page not found</h1><p className="mt-2 text-sm text-slate-500">This OfferTamizha page does not exist.</p><Link href="/" className="mt-5 inline-flex rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-black text-white dark:bg-white dark:text-slate-950">Back to home</Link></div></main>}
