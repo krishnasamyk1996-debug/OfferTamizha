@@ -1,5 +1,7 @@
 'use client'
 
+// Responsive hero uses dedicated desktop and mobile assets.
+
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import {
