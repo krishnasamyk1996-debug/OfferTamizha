@@ -1,4 +1,4 @@
-import type { Product, Slide } from '../types'
+import type { Banner, Product } from '../types'
 import { createBrowserClient } from '@supabase/ssr'
 
 export type AdminSession = {
@@ -315,24 +315,25 @@ export async function saveSiteSettings(settings: SiteSettingsMap): Promise<void>
   await logActivity('Site settings updated', 'settings', 'Brand, social and SEO settings', 'blue')
 }
 
-export async function loadBanners(): Promise<Slide[]> {
-  if (!isSupabaseConfigured) return safeParse<Slide[]>(localStorage.getItem(LOCAL_BANNERS_KEY), [])
+export async function loadBanners(): Promise<Banner[]> {
+  if (!isSupabaseConfigured) return safeParse<Banner[]>(localStorage.getItem(LOCAL_BANNERS_KEY), [])
   const rows = await rest<any[]>('banners?select=*&active=eq.true&order=sort_order.asc', {}, false)
-  return rows.map((r:any)=>({ id:Number(r.id), type:'image', src:r.image, title:r.title, cta:r.cta, href:r.href } as Slide))
+  return rows.map((r:any)=>({ id:Number(r.id), src:r.image, title:r.title, cta:r.cta, href:r.href } as Banner))
 }
 
 export async function saveBanner(banner: { id?:number; title?:string; image:string; href?:string; cta?:string; active?:boolean; sortOrder?:number }): Promise<void> {
   if (!isSupabaseConfigured) {
-    const current = safeParse<any[]>(localStorage.getItem(LOCAL_BANNERS_KEY), [])
-    const row = { ...banner, id: banner.id || Math.max(0,...current.map(x=>x.id||0))+1 }
-    const next = current.some(x=>x.id===row.id) ? current.map(x=>x.id===row.id?row:x) : [...current,row]
-    localStorage.setItem(LOCAL_BANNERS_KEY, JSON.stringify(next))
+    const row = { ...banner, id: banner.id || 1 }
+    localStorage.setItem(LOCAL_BANNERS_KEY, JSON.stringify([row]))
     await logActivity('Banner updated', 'banner', banner.title || 'Homepage banner', 'pink')
     return
   }
   const row = { title:banner.title||'', image:banner.image, href:banner.href||'#', cta:banner.cta||'View Deal', active:banner.active!==false, sort_order:banner.sortOrder||0 }
   if (banner.id) await rest(`banners?id=eq.${banner.id}`, { method:'PATCH', body:JSON.stringify(row) }, true)
-  else await rest('banners', { method:'POST', body:JSON.stringify(row) }, true)
+  else {
+    await rest('banners?id=not.is.null', { method:'DELETE' }, true)
+    await rest('banners', { method:'POST', body:JSON.stringify(row) }, true)
+  }
   await logActivity('Banner updated', 'banner', banner.title || 'Homepage banner', 'pink')
 }
 

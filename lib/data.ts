@@ -1,4 +1,4 @@
-import type { Product, Slide } from './types'
+import type { Product } from './types'
 
 export const categories = [
   { name: 'Meesho Deals', sub: 'Huge Savings', icon: '🛍️', tone: 'pink' },
@@ -26,9 +26,3 @@ export const products: Product[] = [
   { id: 12, title: 'Makeup Essentials Kit', store: 'Ajio', category: 'Beauty', emoji: '💄', oldPrice: 1999, price: 899, rating: 4.5, reviews: '2.5K', discount: 55, href: '#' },
 ]
 
-export const slides: Slide[] = [
-  { id: 1, type: 'image', src: '/assets/slides/slide-1.webp' },
-  { id: 2, type: 'image', src: '/assets/slides/slide-2.webp' },
-  { id: 3, type: 'image', src: '/assets/slides/slide-3.webp' },
-  { id: 4, type: 'image', src: '/assets/slides/slide-4.webp' },
-]

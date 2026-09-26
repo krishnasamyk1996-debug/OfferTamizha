@@ -24,15 +24,10 @@ export interface Product {
   updatedAt?: string
 }
 
-export interface Slide {
+export interface Banner {
   id: number
-  type: 'image' | 'design'
-  src?: string
-  eyebrow?: string
+  src: string
   title?: string
-  accent?: string
-  copy?: string
   cta?: string
   href?: string
-  theme?: 'orange' | 'purple' | 'blue'
 }

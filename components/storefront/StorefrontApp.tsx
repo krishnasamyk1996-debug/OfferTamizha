@@ -10,9 +10,9 @@ import {
   Truck, Users, X, Youtube, Zap, Clock3, ExternalLink, Grid2X2,
 } from 'lucide-react'
 import { categories, products as seedProducts } from '../../lib/data'
-import type { Product } from '../../lib/types'
+import type { Banner, Product } from '../../lib/types'
 import { siteSettings } from '../../lib/siteConfig'
-import { loadDeals, loadSiteSettings, recordDealClick, recordPageView, type SiteSettingsMap } from '../../lib/backend/client'
+import { loadBanners, loadDeals, loadSiteSettings, recordDealClick, recordPageView, type SiteSettingsMap } from '../../lib/backend/client'
 import { cn } from '../../lib/utils'
 
 const categoryTones: Record<string,string> = {
@@ -61,20 +61,19 @@ function Header({query,setQuery,onCategory,telegramUrl,dark,toggleTheme}:{query:
   </>
 }
 
-function Hero(){
+function HeroBanner({banner}:{banner:Banner|null}){
+  if(!banner?.src)return null
+  const image=<img
+    src={banner.src}
+    alt={banner.title||'OfferTamizha banner'}
+    className="block h-auto w-full object-contain"
+    loading="eager"
+    fetchPriority="high"
+    decoding="async"
+  />
   return <section className="mx-auto mt-3 max-w-[1500px] px-2 sm:mt-4 sm:px-5 lg:px-6">
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm sm:rounded-3xl dark:border-slate-800 dark:bg-slate-900">
-      <picture>
-        <source media="(max-width: 767px)" srcSet="/assets/mobile%2001.png"/>
-        <img
-          src="/assets/slide%2001.png"
-          alt="OfferTamizha smart shopping deals"
-          className="block h-auto w-full object-contain"
-          loading="eager"
-          fetchPriority="high"
-          decoding="async"
-        />
-      </picture>
+      {banner.href&&banner.href!=='#'?<a href={banner.href} target="_blank" rel="noreferrer">{image}</a>:image}
     </div>
   </section>
 }
@@ -97,6 +96,7 @@ function Footer({settings}:{settings:SiteSettingsMap}){
 
 export default function StorefrontApp(){
   const [deals,setDeals]=useState<Product[]>(seedProducts)
+  const [banner,setBanner]=useState<Banner|null>(null)
   const [settings,setSettings]=useState<SiteSettingsMap>({})
   const [query,setQuery]=useState('')
   const [category,setCategory]=useState<string|null>(null)
@@ -106,7 +106,7 @@ export default function StorefrontApp(){
   const [loading,setLoading]=useState(true)
   const {dark,toggle}=useTheme()
 
-  useEffect(()=>{ try{setWish(JSON.parse(localStorage.getItem('ot-wishlist')||'[]'))}catch{}; recordPageView('/').catch(()=>{}); (async()=>{try{const [d,s]=await Promise.all([loadDeals(false),loadSiteSettings()]); if(d.length)setDeals(d); setSettings(s)}catch{}finally{setLoading(false)}})() },[])
+  useEffect(()=>{ try{setWish(JSON.parse(localStorage.getItem('ot-wishlist')||'[]'))}catch{}; recordPageView('/').catch(()=>{}); (async()=>{try{const [d,b,s]=await Promise.all([loadDeals(false),loadBanners(),loadSiteSettings()]); if(d.length)setDeals(d); setBanner(b[0]||null); setSettings(s)}catch{}finally{setLoading(false)}})() },[])
   const toggleWish=(id:number)=>setWish(v=>{const next=v.includes(id)?v.filter(x=>x!==id):[...v,id];localStorage.setItem('ot-wishlist',JSON.stringify(next));return next})
   const filtered=useMemo(()=>{let list=deals.filter(d=>d.active!==false); if(category){list=list.filter(d=>d.category===category||`${d.store} Deals`===category)} if(query.trim()){const q=query.toLowerCase();list=list.filter(d=>`${d.title} ${d.store} ${d.category} ${d.description||''}`.toLowerCase().includes(q))} if(sort==='newest')list=[...list].sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||''))); if(sort==='featured')list=[...list].sort((a,b)=>Number(b.featured)-Number(a.featured)); return list},[deals,category,query,sort])
   const telegram=settings.telegramUrl||siteSettings.telegramUrl
@@ -114,7 +114,7 @@ export default function StorefrontApp(){
   return <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
     <Header query={query} setQuery={setQuery} onCategory={setCategory} telegramUrl={telegram} dark={dark} toggleTheme={toggle}/>
     <main>
-      <Hero/>
+      <HeroBanner banner={banner}/>
       <CategoryGrid onPick={setCategory}/>
       <section className="mx-auto max-w-[1500px] px-3 sm:px-5 lg:px-6"><div className="overflow-hidden rounded-2xl bg-gradient-to-r from-brand-500 via-orange-500 to-rose-500 p-[1px] shadow-lg shadow-orange-500/10"><div className="flex flex-col gap-3 rounded-[15px] bg-white/96 px-4 py-4 sm:flex-row sm:items-center sm:justify-between dark:bg-slate-950/95"><div className="flex items-center gap-3"><div className="grid size-11 place-items-center rounded-xl bg-brand-500 text-white"><Zap className="size-5 fill-current"/></div><div><p className="text-xs font-black uppercase tracking-[.2em] text-brand-600">Hot right now</p><h2 className="text-lg font-black sm:text-xl">Today&apos;s smartest savings</h2></div></div><div className="flex items-center gap-2 text-xs font-bold text-slate-500"><Clock3 className="size-4"/>Deals can change anytime — grab them while live.</div></div></div></section>
       <section className="mx-auto max-w-[1500px] px-3 py-7 sm:px-5 lg:px-6"><div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-black uppercase tracking-[.18em] text-brand-600">{category||'Latest Deals'}</p><h2 className="mt-1 text-2xl font-black tracking-tight">{query?`Results for “${query}”`:category||'Hand-picked deals for you'}</h2><p className="mt-1 text-xs text-slate-500">{loading?'Syncing live deals…':`${filtered.length} active deals`}</p></div><select value={sort} onChange={e=>setSort(e.target.value as any)} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold outline-none dark:border-slate-800 dark:bg-slate-900"><option value="featured">Featured first</option><option value="newest">Newest first</option></select></div>{filtered.length?<div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">{filtered.map(p=><DealCard key={p.id} p={p} wished={wish.includes(p.id)} onWish={()=>toggleWish(p.id)}/>)}</div>:<div className="rounded-3xl border border-dashed border-slate-300 bg-white p-14 text-center dark:border-slate-700 dark:bg-slate-900"><Search className="mx-auto size-8 text-slate-400"/><h3 className="mt-3 font-black">No matching deals</h3><p className="mt-1 text-sm text-slate-500">Try another search or category.</p></div>}</section>
