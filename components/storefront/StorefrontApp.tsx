@@ -3,14 +3,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import {
-  ArrowRight, BadgePercent, Bell, ChevronLeft, ChevronRight, Heart, Home, Instagram,
+  ArrowRight, BadgePercent, Bell, Heart, Home, Instagram,
   Menu, Moon, Search, Send, ShieldCheck, ShoppingBag, Sparkles, Star, Sun, Tag,
   Truck, Users, X, Youtube, Zap, Clock3, ExternalLink, Grid2X2,
 } from 'lucide-react'
-import { categories, products as seedProducts, slides as seedSlides } from '../../lib/data'
-import type { Product, Slide } from '../../lib/types'
+import { categories, products as seedProducts } from '../../lib/data'
+import type { Product } from '../../lib/types'
 import { siteSettings } from '../../lib/siteConfig'
-import { loadBanners, loadDeals, loadSiteSettings, recordDealClick, recordPageView, type SiteSettingsMap } from '../../lib/backend/client'
+import { loadDeals, loadSiteSettings, recordDealClick, recordPageView, type SiteSettingsMap } from '../../lib/backend/client'
 import { cn } from '../../lib/utils'
 
 const categoryTones: Record<string,string> = {
@@ -59,13 +59,23 @@ function Header({query,setQuery,onCategory,telegramUrl,dark,toggleTheme}:{query:
   </>
 }
 
-function Hero({slides}:{slides:Slide[]}){
-  const [i,setI]=useState(0)
-  useEffect(()=>{ if(slides.length<2)return; const id=setInterval(()=>setI(v=>(v+1)%slides.length),4500); return()=>clearInterval(id)},[slides.length])
-  if(!slides.length)return null
-  return <section className="mx-auto mt-4 max-w-[1500px] px-3 sm:px-5 lg:px-6"><div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm sm:rounded-3xl dark:border-slate-800 dark:bg-slate-900"><div className="flex transition-transform duration-700 ease-out" style={{transform:`translateX(-${i*100}%)`}}>{slides.map((s,idx)=><div key={`${s.id}-${idx}`} className="min-w-full">{s.type==='image'&&s.src?<a href={s.href||'#'} target={s.href&&s.href!=='#'?'_blank':undefined} rel="noreferrer"><img src={s.src} alt={s.title||`OfferTamizha banner ${idx+1}`} className="h-[225px] w-full object-cover sm:h-[330px] lg:h-[410px] xl:h-[500px] 2xl:h-[550px]"/></a>:<div className="flex aspect-[16/5] items-center bg-gradient-to-br from-brand-500 via-orange-500 to-rose-500 p-8 text-white"><div><p className="text-xs font-black uppercase tracking-[.22em]">{s.eyebrow||'OfferTamizha Exclusive'}</p><h2 className="mt-2 text-3xl font-black sm:text-5xl">{s.title}<span className="block">{s.accent}</span></h2><p className="mt-3 max-w-xl text-sm text-white/85 sm:text-base">{s.copy}</p></div></div>}</div>)}</div>{slides.length>1&&<><button onClick={()=>setI(v=>(v-1+slides.length)%slides.length)} className="absolute left-3 top-1/2 grid size-10 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-slate-900 opacity-0 shadow-lg transition group-hover:opacity-100"><ChevronLeft className="size-5"/></button><button onClick={()=>setI(v=>(v+1)%slides.length)} className="absolute right-3 top-1/2 grid size-10 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-slate-900 opacity-0 shadow-lg transition group-hover:opacity-100"><ChevronRight className="size-5"/></button><div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5 rounded-full bg-slate-950/25 p-1.5 backdrop-blur">{slides.map((_,idx)=><button key={idx} onClick={()=>setI(idx)} className={cn('h-1.5 rounded-full transition-all',idx===i?'w-6 bg-white':'w-1.5 bg-white/55')} aria-label={`Slide ${idx+1}`}/>)}</div></>}</div></section>
+function Hero(){
+  return <section className="mx-auto mt-3 max-w-[1500px] px-2 sm:mt-4 sm:px-5 lg:px-6">
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm sm:rounded-3xl dark:border-slate-800 dark:bg-slate-900">
+      <picture>
+        <source media="(max-width: 767px)" srcSet="/assets/mobile%2001.png"/>
+        <img
+          src="/assets/slide%2001.png"
+          alt="OfferTamizha smart shopping deals"
+          className="block h-auto w-full object-contain"
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
+        />
+      </picture>
+    </div>
+  </section>
 }
-
 function CategoryGrid({onPick}:{onPick:(v:string)=>void}){
   return <section className="mx-auto max-w-[1500px] px-3 py-7 sm:px-5 lg:px-6"><div className="mb-4 flex items-end justify-between"><div><div className="flex items-center gap-2 text-xs font-black uppercase tracking-[.18em] text-brand-600"><Sparkles className="size-4"/>Browse faster</div><h2 className="mt-1 text-xl font-black tracking-tight sm:text-2xl">Shop by category</h2></div><span className="hidden text-xs text-slate-500 sm:block">Fresh offers, hand-picked for Tamil shoppers</span></div><div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 lg:grid-cols-8">{categories.map(c=><button key={c.name} onClick={()=>onPick(c.name)} className={cn('group rounded-2xl border border-slate-200 bg-gradient-to-br p-3 text-left shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg dark:border-slate-800',categoryTones[c.name]||'from-slate-500/10 to-slate-500/5')}><div className="grid size-11 place-items-center rounded-xl bg-white/90 text-2xl shadow-sm transition group-hover:scale-105 dark:bg-slate-950/70">{c.icon}</div><b className="mt-3 block text-xs leading-tight sm:text-[13px]">{c.name}</b><small className="mt-1 block text-[10px] opacity-70">{c.sub}</small></button>)}</div></section>
 }
@@ -85,7 +95,6 @@ function Footer({settings}:{settings:SiteSettingsMap}){
 
 export default function StorefrontApp(){
   const [deals,setDeals]=useState<Product[]>(seedProducts)
-  const [slides,setSlides]=useState<Slide[]>(seedSlides)
   const [settings,setSettings]=useState<SiteSettingsMap>({})
   const [query,setQuery]=useState('')
   const [category,setCategory]=useState<string|null>(null)
@@ -95,7 +104,7 @@ export default function StorefrontApp(){
   const [loading,setLoading]=useState(true)
   const {dark,toggle}=useTheme()
 
-  useEffect(()=>{ try{setWish(JSON.parse(localStorage.getItem('ot-wishlist')||'[]'))}catch{}; recordPageView('/').catch(()=>{}); (async()=>{try{const [d,b,s]=await Promise.all([loadDeals(false),loadBanners(),loadSiteSettings()]); if(d.length)setDeals(d); if(b.length)setSlides(b); setSettings(s)}catch{}finally{setLoading(false)}})() },[])
+  useEffect(()=>{ try{setWish(JSON.parse(localStorage.getItem('ot-wishlist')||'[]'))}catch{}; recordPageView('/').catch(()=>{}); (async()=>{try{const [d,s]=await Promise.all([loadDeals(false),loadSiteSettings()]); if(d.length)setDeals(d); setSettings(s)}catch{}finally{setLoading(false)}})() },[])
   const toggleWish=(id:number)=>setWish(v=>{const next=v.includes(id)?v.filter(x=>x!==id):[...v,id];localStorage.setItem('ot-wishlist',JSON.stringify(next));return next})
   const filtered=useMemo(()=>{let list=deals.filter(d=>d.active!==false); if(category){list=list.filter(d=>d.category===category||`${d.store} Deals`===category)} if(query.trim()){const q=query.toLowerCase();list=list.filter(d=>`${d.title} ${d.store} ${d.category} ${d.description||''}`.toLowerCase().includes(q))} if(sort==='newest')list=[...list].sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||''))); if(sort==='featured')list=[...list].sort((a,b)=>Number(b.featured)-Number(a.featured)); return list},[deals,category,query,sort])
   const telegram=settings.telegramUrl||siteSettings.telegramUrl
@@ -103,7 +112,7 @@ export default function StorefrontApp(){
   return <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
     <Header query={query} setQuery={setQuery} onCategory={setCategory} telegramUrl={telegram} dark={dark} toggleTheme={toggle}/>
     <main>
-      <Hero slides={slides}/>
+      <Hero/>
       <CategoryGrid onPick={setCategory}/>
       <section className="mx-auto max-w-[1500px] px-3 sm:px-5 lg:px-6"><div className="overflow-hidden rounded-2xl bg-gradient-to-r from-brand-500 via-orange-500 to-rose-500 p-[1px] shadow-lg shadow-orange-500/10"><div className="flex flex-col gap-3 rounded-[15px] bg-white/96 px-4 py-4 sm:flex-row sm:items-center sm:justify-between dark:bg-slate-950/95"><div className="flex items-center gap-3"><div className="grid size-11 place-items-center rounded-xl bg-brand-500 text-white"><Zap className="size-5 fill-current"/></div><div><p className="text-xs font-black uppercase tracking-[.2em] text-brand-600">Hot right now</p><h2 className="text-lg font-black sm:text-xl">Today&apos;s smartest savings</h2></div></div><div className="flex items-center gap-2 text-xs font-bold text-slate-500"><Clock3 className="size-4"/>Deals can change anytime — grab them while live.</div></div></div></section>
       <section className="mx-auto max-w-[1500px] px-3 py-7 sm:px-5 lg:px-6"><div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-black uppercase tracking-[.18em] text-brand-600">{category||'Latest Deals'}</p><h2 className="mt-1 text-2xl font-black tracking-tight">{query?`Results for “${query}”`:category||'Hand-picked deals for you'}</h2><p className="mt-1 text-xs text-slate-500">{loading?'Syncing live deals…':`${filtered.length} active deals`}</p></div><select value={sort} onChange={e=>setSort(e.target.value as any)} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold outline-none dark:border-slate-800 dark:bg-slate-900"><option value="featured">Featured first</option><option value="newest">Newest first</option></select></div>{filtered.length?<div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">{filtered.map(p=><DealCard key={p.id} p={p} wished={wish.includes(p.id)} onWish={()=>toggleWish(p.id)}/>)}</div>:<div className="rounded-3xl border border-dashed border-slate-300 bg-white p-14 text-center dark:border-slate-700 dark:bg-slate-900"><Search className="mx-auto size-8 text-slate-400"/><h3 className="mt-3 font-black">No matching deals</h3><p className="mt-1 text-sm text-slate-500">Try another search or category.</p></div>}</section>
